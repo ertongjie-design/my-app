@@ -11,32 +11,35 @@ function Square(props){
 }
 
 class Board extends React.Component {
-  constructor(){
-    super()
-    this.state = {
-      squares: Array(9).fill(null),
-      player: true
-    }
-  }
 
-  handleClick(i){
-    if(this.state.squares[i] !== null){
-      return
-    }
-    const squares = this.state.squares.slice()
-    this.state.player ? squares[i] = "X" : squares[i] = "O"
-    this.setState({
-      squares,
-      player: !this.state.player
+  calculateWinner(squares){
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+    let flag = 0;
+    lines.forEach(i => {
+      if(squares[i[0]] === squares[i[1]] && squares[i[1]] === squares[i[2]] && squares[i[0]] !== null){
+        flag = squares[i[0]]
+      }
     })
+    return flag ? "Winner is " + flag : null
   }
 
   renderSquare(i) {
-    return <Square value={this.state.squares[i]} onClick={() => {this.handleClick(i)}} />;
+    return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i, this.calculateWinner(this.props.squares))} />;
   }
 
   render() {
-    const status = 'Next player: ' + (this.state.player ? "X" : "O");
+    const squares = this.props.squares
+    const winner = this.calculateWinner(squares)
+    const status = winner ? winner : 'Next player: ' + (this.props.player ? "X" : "O")
 
     return (
       <div>
@@ -62,11 +65,49 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      history: [
+        {
+          squares: Array(9).fill(null),
+          player: true
+        }
+      ],
+      player: true
+    }
+  }
+
+  handleClick(i, n){
+    const history = this.state.history.slice()
+    const player = this.state.player
+    const oldSquares = history[history.length-1].squares.slice()
+    if(oldSquares[i] !== null || n){
+      return
+    }
+    const newSquares = oldSquares.slice()
+    newSquares[i] = player ? "X" : "O"
+    debugger
+    history.push({
+      squares: newSquares,
+      player: !player
+    })
+    this.setState({
+      history,
+      player: !player
+    })
+  }
+
   render() {
+    const history = this.state.history
+    const squares = history[history.length-1].squares
+    const player = this.state.player
+    debugger
+
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board squares={squares} player={player} onClick={(i, n) => {this.handleClick(i, n)}} />
         </div>
         <div className="game-info">
           <div>{/* status */}</div>
